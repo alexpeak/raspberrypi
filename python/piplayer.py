@@ -14,7 +14,7 @@ import os
 import signal
 import humble
 import subprocess
-import urllib, os
+import urllib.request, urllib.parse, urllib.error, os
 from bs4 import BeautifulSoup
 
 currentstation = 0
@@ -47,31 +47,31 @@ def nowPlaying():
     global currentstation
     global stationInfo
     global stations
-    print "NOWPLAYING"
+    print("NOWPLAYING")
 
     if currentstation==0:
-        f = urllib.urlopen('http://www.bbc.co.uk/radio/player/bbc_6music')
+        f = urllib.request.urlopen('http://www.bbc.co.uk/radio/player/bbc_6music')
         stuff = f.read()
         soup = BeautifulSoup(stuff)
         for div in soup.find_all('div'):
-            if (div.attrs.has_key('id') and ('now-playing' in div['id']) ):
+            if ('id' in div.attrs and ('now-playing' in div['id']) ):
                 artist = div.find(id='artists').get_text().lstrip().rstrip()
                 track = div.find(id='track').get_text().lstrip().rstrip()
-            if (div.attrs.has_key('id') and ('title' in div['id']) ):
+            if ('id' in div.attrs and ('title' in div['id']) ):
                 title = div.get_text().lstrip().rstrip()
-            if (div.attrs.has_key('id') and ('description' in div['id']) ):
+            if ('id' in div.attrs and ('description' in div['id']) ):
                 description = div.get_text().lstrip().rstrip()
 
         nowplaying = "Now Playing: " + track + " by " + artist
 
     if BIGDISPLAY:
         humble.data.setLine(1,stations[currentstation][0])
-        print "BIG"
-        print nowplaying
+        print("BIG")
+        print(nowplaying)
         humble.data.setLine(2,nowplaying)
         humble.data.setScroll(2,True)
     else:
-        print stationInfo
+        print(stationInfo)
         if stationInfo:
         #humble.data.setLine(1,stations[currentstation])
             humble.data.setLine(1,stations[currentstation][0])
@@ -95,7 +95,7 @@ def doStuff():
 #    humble.init()
     showPaused()
     
-    print "piPlayer"
+    print("piPlayer")
     
     currentstation = 0
     humble.data.setLine(1, stations[currentstation][0])
@@ -114,7 +114,7 @@ def doStuff():
             loops = 0
         if (humble.switch(0)):
             if (not playing):
-                print "Now Playing: " + stations[currentstation][0]
+                print("Now Playing: " + stations[currentstation][0])
                 showPlaying()
                 humble.data.setLine(1, stations[currentstation][0])
                 humble.data.setScroll(1,False)
@@ -134,7 +134,7 @@ def doStuff():
         if (playing and humble.switch(1)):
             os.killpg(proc.pid, signal.SIGTERM)
             currentstation = (currentstation + 1) % len(stations) 
-            print "Now Playing: " + stations[currentstation][0]
+            print("Now Playing: " + stations[currentstation][0])
             humble.data.setLine(1, stations[currentstation][0])
             humble.data.setScroll(1,False)
             proc = subprocess.Popen("mplayer -quiet " + stations[currentstation][1], 

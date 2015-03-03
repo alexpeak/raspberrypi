@@ -1,4 +1,4 @@
-import urllib, os
+import urllib.request, urllib.parse, urllib.error, os
 from bs4 import BeautifulSoup
 import re
 import humble
@@ -51,25 +51,25 @@ def green():
     humble.data.setLed('green',True)
     humble.data.setLed('yellow',False)
     humble.data.setLed('red',False)
-    print "Green"
+    print("Green")
 
 def yellow():
     humble.data.setLed('green',False)
     humble.data.setLed('yellow',True)
     humble.data.setLed('red',False)
-    print "Yellow"
+    print("Yellow")
 
 def red():
     humble.data.setLed('green',False)
     humble.data.setLed('yellow',False)
     humble.data.setLed('red',True)
-    print "Red"
+    print("Red")
 
 def off():
     humble.data.setLed('green',False)
     humble.data.setLed('yellow',False)
     humble.data.setLed('red',False)
-    print "Off"
+    print("Off")
 
 
 def lights(now, times):
@@ -79,7 +79,7 @@ def lights(now, times):
     # If it's the case that any train yields green, then show green. Same for yellow. 
     for i in range (0,len(times)):
         togo = times[i] - now
-        print str(togo) + " Minutes"
+        print(str(togo) + " Minutes")
         if (togo) > (WAITING + WALKING):
             pass
         elif (togo) > (DANGER + WALKING):
@@ -97,7 +97,7 @@ def lights(now, times):
         red()
 
 def shorten(station):
-    if STATIONS.has_key(station):
+    if station in STATIONS:
         return STATIONS[station]
     else:
         return station[:3]
@@ -106,7 +106,7 @@ def shorten(station):
 def getTrains(soup):
     trains = []
     for div in soup.find_all('div'):
-        if (div.attrs.has_key('class') and ("tbl-cont" in div['class']) ):
+        if ('class' in div.attrs and ("tbl-cont" in div['class']) ):
             body = div.table.tbody
             rows = body.find_all('tr')
             for r in range(0,len(rows)):
@@ -133,24 +133,24 @@ def printTrains(trains):
     destLength = 10
     printFormat = ' {time:<6}| {estimate:<6}| {dest:<' + str(destLength) + '}| {report:<20}'
     printFormat = '{time:<5} {dest:<' + str(destLength) + '} {estimate:<5}'
-    print printFormat.format(time="Time",
+    print(printFormat.format(time="Time",
                              dest="To",
                              estimate="Est",
-                             report="Report")
-    print "========================================================="
-    print "1234567890123456"
+                             report="Report"))
+    print("=========================================================")
+    print("1234567890123456")
     for train in trains:
-        print printFormat.format(time=train['time'],
+        print(printFormat.format(time=train['time'],
                                  dest=train['dest'][:destLength],
                                  estimate=train['est'],
-                                 report=train['report'])
-    print "========================================================="
+                                 report=train['report']))
+    print("=========================================================")
     if (VOICE):
         if trains[0]['est'] == "":
             message = 'The next train is at %s' % trains[0]['time']
         else:
             message = 'The next train is scheduled at %s, estimated at %s' % (trains[0]['time'],trains[0]['est'])
-        print message
+        print(message)
         os.system("echo '%s' | festival --tts" % message)
 
 def checkForShutDown():
@@ -253,7 +253,7 @@ def reportTrains(trains):
     return True
 
 def main():    
-    print LDB.format(dep=DEP,arr=ARR)
+    print(LDB.format(dep=DEP,arr=ARR))
     humble.init()
     hdt = humble.HumbleDisplayThread(humble.data)
     hdt.start()
@@ -263,7 +263,7 @@ def main():
 def doStuff():
     carryOn = True
     while(carryOn):
-        f = urllib.urlopen(LDB.format(dep=DEP,arr=ARR))
+        f = urllib.request.urlopen(LDB.format(dep=DEP,arr=ARR))
         stuff = f.read()
         o = open('tmp.html','w')
         o.write(stuff)

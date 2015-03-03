@@ -38,11 +38,11 @@ class TSL2561:
             if (gain==1):
                 self.i2c.write8(0x81, 0x02)     # set gain = 1X and timing = 402 mSec
                 if (self.debug):
-                    print "Setting low gain"
+                    print("Setting low gain")
             else:
                 self.i2c.write8(0x81, 0x12)     # set gain = 16X and timing = 402 mSec
                 if (self.debug):
-                    print "Setting high gain"
+                    print("Setting high gain")
             self.gain=gain;                     # safe gain for calculation
             time.sleep(self.pause)              # pause for integration (self.pause must be bigger than integration time)
 
@@ -53,10 +53,10 @@ class TSL2561:
             wordval = self.i2c.readU16(reg)
             newval = self.i2c.reverseByteOrder(wordval)
             if (self.debug):
-                print("I2C: Device 0x%02X returned 0x%04X from reg 0x%02X" % (self.address, wordval & 0xFFFF, reg))
+                print(("I2C: Device 0x%02X returned 0x%04X from reg 0x%02X" % (self.address, wordval & 0xFFFF, reg)))
             return newval
         except IOError:
-            print("Error accessing 0x%02X: Check your I2C address" % self.address)
+            print(("Error accessing 0x%02X: Check your I2C address" % self.address))
             return -1
 
 
@@ -91,8 +91,8 @@ class TSL2561:
         ratio = (IR / float(ambient)) # changed to make it run under python 2
 
         if (self.debug):
-            print "IR Result", IR
-            print "Ambient Result", ambient
+            print("IR Result", IR)
+            print("Ambient Result", ambient)
 
         if ((ratio >= 0) & (ratio <= 0.52)):
             lux = (0.0315 * ambient) - (0.0593 * ambient * (ratio**1.4))
@@ -109,7 +109,7 @@ class TSL2561:
 
 if __name__ == "__main__":
     tsl=TSL2561()
-    print tsl.readLux()
+    print(tsl.readLux())
 #print "LUX HIGH GAIN ", tsl.readLux(16)
 #print "LUX LOW GAIN ", tsl.readLux(1)
 #print "LUX AUTO GAIN ", tsl.readLux()

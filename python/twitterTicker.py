@@ -2,7 +2,7 @@
 import os
 import humbleII as humble
 import time
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import simplejson
 import argparse
 from twython import Twython, TwythonError
@@ -12,7 +12,7 @@ PAUSE = 20
 
 def showTweet(user, message, verbose=False):
     if verbose:
-        print user, message
+        print(user, message)
     humble.data.setLine(0, "@"+user)
     humble.data.setScroll(1, True)
     humble.data.setLine(1, message)
@@ -56,7 +56,7 @@ def main():
                                tweet['text'].encode('utf-8'))
                 time.sleep(PAUSE)
         except TwythonError as e:
-            print e
+            print(e)
 
 if __name__ == '__main__':
     main()

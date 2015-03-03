@@ -1,6 +1,6 @@
-import ConfigParser 
+import configparser 
 
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 config.read('/home/pi/conf/config.cfg')
 
 def key(key):

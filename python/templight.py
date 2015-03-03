@@ -23,7 +23,7 @@ if __name__ == "__main__":
   lb = LedBorg.LedBorg()
   while True:
       temp = bmp.readTemperature()
-      print temp
+      print(temp)
       if temp <= COLD:
           lb.show(colours[COLD])
       elif temp <= COOL:

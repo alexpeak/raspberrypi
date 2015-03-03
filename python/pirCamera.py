@@ -8,7 +8,7 @@ import RPi.GPIO as GPIO
 import argparse, os
 import time, datetime
 from twython import Twython, TwythonError
-import ConfigParser
+import configparser
 
 CYCLE=2
 PIN = 7
@@ -19,7 +19,7 @@ GPIO.setwarnings(False) # Turn warnings off
 GPIO.setmode(GPIO.BOARD)  
 GPIO.setup(PIN, GPIO.IN)  
 
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 config.read('/home/pi/conf/config.cfg')
 APP_KEY = config.get('KEYS','twitter.consumer.key')
 APP_SECRET = config.get('KEYS','twitter.consumer.secret')
@@ -41,7 +41,7 @@ def tweetPhoto(photo_info):
     """Tweet a photo"""
     photo = open(photo_info['name'], 'rb')
     message = 'Photo: ' + photo_info['time'].strftime('%H:%M:%S on %d/%m/%y')
-    print message
+    print(message)
     twitter.update_status_with_media(status=message,
                                      media=photo)
     # Delete photo_name
@@ -67,16 +67,16 @@ def main():
 
     while True:
         if args.verbose:
-            print GPIO.input(PIN)
+            print(GPIO.input(PIN))
         if GPIO.input(PIN):
             if args.photo:
                 photo_info = takePhoto()
                 if args.verbose:
-                    print photo_info
+                    print(photo_info)
                 if args.tweet:
                     tweetPhoto(photo_info)
                     if args.verbose:
-                        print 'Tweeted!'
+                        print('Tweeted!')
                 time.sleep(args.delay)
         time.sleep(args.cycle)
 

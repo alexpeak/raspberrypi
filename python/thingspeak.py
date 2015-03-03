@@ -1,4 +1,4 @@
-import httplib, urllib, keys
+import http.client, urllib.request, urllib.parse, urllib.error, keys
 
 KEY = keys.key('thingspeak')
 #print KEY
@@ -6,14 +6,14 @@ KEY = keys.key('thingspeak')
 def log(stuff,verbose=False):
     stuff['key'] = KEY
     if verbose:
-        print stuff
-    params = urllib.urlencode(stuff)
+        print(stuff)
+    params = urllib.parse.urlencode(stuff)
     headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
-    conn = httplib.HTTPConnection("api.thingspeak.com:80")
+    conn = http.client.HTTPConnection("api.thingspeak.com:80")
     conn.request("POST", "/update", params, headers)
     response = conn.getresponse()
     if verbose:
-        print response.status, response.reason
+        print(response.status, response.reason)
     data = response.read()
     conn.close()
 

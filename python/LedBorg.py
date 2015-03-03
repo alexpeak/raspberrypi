@@ -43,7 +43,7 @@ if __name__ == "__main__":
     lb = LedBorg()
     while True:
         for colour in lb.colours:
-            print colour
+            print(colour)
             lb.show(colour)
             time.sleep(2)
 

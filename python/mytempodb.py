@@ -1,9 +1,9 @@
-import datetime,time, ConfigParser
+import datetime,time, configparser
 from tempodb import Client, DataPoint
 
 # Modify these with your credentials found at: http://tempo-db.com/manage/
 
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 config.read('/home/pi/conf/config.cfg')
 KEY = config.get('KEYS','tempo.db.key')
 SECRET = config.get('KEYS','tempo.db.secret')

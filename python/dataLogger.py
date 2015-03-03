@@ -67,14 +67,14 @@ def publishTempo(data,verbose=False):
     mytempodb.write("pi.temperature",timestamp,data['field2'])
     mytempodb.write("pi.pressure",timestamp,data['field3'])
     if verbose:
-        print "Published to tempo-db", hms(timestamp)
+        print("Published to tempo-db", hms(timestamp))
 
 def publishThingSpeak(data,verbose=False):
     '''Publish to Thingspeak'''
     timestamp=datetime.datetime.now()
     thingspeak.log(data,verbose)
     if verbose:
-        print "Published to thingspeak", hms(timestamp)
+        print("Published to thingspeak", hms(timestamp))
 
 def store(db,lux,temperature,pressure,verbose=False):
     '''store locally'''
@@ -83,7 +83,7 @@ def store(db,lux,temperature,pressure,verbose=False):
     cursor.execute("INSERT INTO data (lux,temperature,pressure) VALUES ("+str(lux)+","+str(temperature)+","+str(pressure)+")")
     conn.commit()
     if verbose:
-        print "Logged to ", db
+        print("Logged to ", db)
     
 def report(lux,temperature,pressure):
     '''Report information to display'''
@@ -102,21 +102,21 @@ def tweet(lux,temperature):
     now=datetime.datetime.now()
     if temperature <= TWEET["cold"]:
         if (now - lastTweet["temperature"]).seconds > TWEET["cycle"]:
-            message = ((now.strftime('%H:%M') + " and Freezing! {t:<4}" + u'\u00b0' + "C").format(t=temperature))
+            message = ((now.strftime('%H:%M') + " and Freezing! {t:<4}" + '\u00b0' + "C").format(t=temperature))
             lastTweet["temperature"] = now
     if temperature > TWEET["hot"]:
         if (now - lastTweet["temperature"]).seconds > TWEET["cycle"]:
-            message = ((now.strftime('%H:%M') + " and Hot Hot Hot! {t:<4}"+ u'\u00b0' + "C").format(t=temperature))
+            message = ((now.strftime('%H:%M') + " and Hot Hot Hot! {t:<4}"+ '\u00b0' + "C").format(t=temperature))
             lastTweet["temperature"] = now
     if (now - lastTweet["temperature"]).seconds > TWEET["tweet"]:
         if temperature <= TWEET["cold"]:
-            message = ((now.strftime('%H:%M') + " and Freezing! {t:<4}" + u'\u00b0' + "C").format(t=temperature))
+            message = ((now.strftime('%H:%M') + " and Freezing! {t:<4}" + '\u00b0' + "C").format(t=temperature))
             lastTweet["temperature"] = now
         elif temperature > TWEET["hot"]:
-            message = ((now.strftime('%H:%M') + " and Hot Hot Hot! {t:<4}" + u'\u00b0' + "C").format(t=temperature))
+            message = ((now.strftime('%H:%M') + " and Hot Hot Hot! {t:<4}" + '\u00b0' + "C").format(t=temperature))
             lastTweet["temperature"] = now
         else:
-            message = ((now.strftime('%H:%M') + " and {t:<4}" + u'\u00b0' + "C").format(t=temperature))
+            message = ((now.strftime('%H:%M') + " and {t:<4}" + '\u00b0' + "C").format(t=temperature))
             lastTweet["temperature"] = now
 
     if lux <= TWEET["dark"]:
@@ -179,7 +179,7 @@ def main():
     parser.add_argument('-s','--store', help='log to database')
     args = parser.parse_args()
 
-    print "Data Logger"
+    print("Data Logger")
     status = "Options:"
     if args.tweet:
         status = status + " tweet"
@@ -195,7 +195,7 @@ def main():
         status = status + " verbose"
     if args.store:
         status = status + " store: " + args.store
-    print status
+    print(status)
     exit
 
     if (args.lcd or args.led):
@@ -218,12 +218,12 @@ def main():
         if args.led:
             colour(temperature)
         if args.verbose:
-            print "LUX: ", lux
-            print "TMP: ", temperature
-            print "PRS: ", pressure
-            print "Last Tweets"
-            print "  lux", hms(lastTweet["lux"])
-            print " temp", hms(lastTweet["temperature"])
+            print("LUX: ", lux)
+            print("TMP: ", temperature)
+            print("PRS: ", pressure)
+            print("Last Tweets")
+            print("  lux", hms(lastTweet["lux"]))
+            print(" temp", hms(lastTweet["temperature"]))
            
 
         if args.tweet:

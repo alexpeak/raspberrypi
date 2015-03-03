@@ -19,7 +19,7 @@ if __name__ == "__main__":
     while(True):
         photo()
         count = count+1
-        print "Taken:", repr(count).rjust(1), "at", datetime.now().strftime("%H:%M:%S")
+        print("Taken:", repr(count).rjust(1), "at", datetime.now().strftime("%H:%M:%S"))
         time.sleep(WAIT-2)
         
         

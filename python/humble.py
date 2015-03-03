@@ -56,7 +56,7 @@ def init():
   for i in range(0,len(SWITCH)):
     GPIO.setup(SWITCH[i], GPIO.IN)  # 
 
-  for k in LED.keys():
+  for k in list(LED.keys()):
     GPIO.setup(LED[k], GPIO.OUT)  # RED
 
   GPIO.setup(E, GPIO.OUT)  # E
@@ -223,7 +223,7 @@ class HumbleDisplayThread(threading.Thread):
           scroll(i,self.data.getLine(i))
         else:
           line(i,self.data.getLine(i))
-      for k in LED.keys():
+      for k in list(LED.keys()):
         led(k,self.data.getLed(k))
       
 if __name__ == '__main__':

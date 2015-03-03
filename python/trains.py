@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import urllib, os
+import urllib.request, urllib.parse, urllib.error, os
 from bs4 import BeautifulSoup
 import re
 import humbleII as humble
@@ -53,25 +53,25 @@ DANGER = 3
 def green():
     global goMessage
     humble.data.setColour('green')
-    print "Green"
+    print("Green")
     STATUS['goMessage'] = "You can go now"
 
 def amber():
     global goMessage
     humble.data.setColour('orange')
-    print "Amber"
+    print("Amber")
     STATUS['goMessage'] = "You should go now"
 
 def red():
     global goMessage
     humble.data.setColour('red')
-    print "Red"
+    print("Red")
     STATUS['goMessage'] = "You should wait"
 
 def off():
     global goMessage
     humble.data.setColour('black')
-    print "Off"
+    print("Off")
     STATUS.goMesssage = ""
 
 def lights(now, times):
@@ -83,7 +83,7 @@ def lights(now, times):
         for i in range (0,len(times)):
             togo = times[i] - now
             
-            print str(togo) + " Minutes"
+            print(str(togo) + " Minutes")
             if (togo) > (WAITING + WALKING):
                 pass
             elif (togo) > (DANGER + WALKING):
@@ -101,7 +101,7 @@ def lights(now, times):
             red()
 
 def shorten(station):
-    if STATIONS.has_key(station):
+    if station in STATIONS:
         return STATIONS[station]
     else:
         return station[:3]
@@ -110,7 +110,7 @@ def shorten(station):
 def getTrains(soup):
     trains = []
     for div in soup.find_all('div'):
-        if (div.attrs.has_key('class') and ("tbl-cont" in div['class']) ):
+        if ('class' in div.attrs and ("tbl-cont" in div['class']) ):
             body = div.table.tbody
             rows = body.find_all('tr')
             for r in range(0,len(rows)):
@@ -135,7 +135,7 @@ def announce(trains):
         nowH = now.strftime('%H')
         nowM = now.strftime('%M')
         timeMessage = 'The time is {h}:{m}'.format(h=nowH,m=nowM)
-        print timeMessage
+        print(timeMessage)
         toSpeak = timeMessage
 #        os.system("echo '%s' | festival --tts" % timeMessage)
 
@@ -143,7 +143,7 @@ def announce(trains):
             message = 'The next train is at %s' % trains[0]['time']
         else:
             message = 'The next train is scheduled at %s, estimated at %s' % (trains[0]['time'],trains[0]['est'])
-        print message
+        print(message)
         toSpeak = toSpeak + ". " + message
 #        os.system("echo '%s' | festival --tts" % message)
 
@@ -152,11 +152,11 @@ def announce(trains):
                 message = 'The train after is at %s' % trains[1]['time']
             else:
                 message = 'The train after is scheduled at %s, estimated at %s' % (trains[1]['time'],trains[1]['est'])
-            print message
+            print(message)
             toSpeak = toSpeak + ". " + message
 #            os.system("echo '%s' | festival --tts" % message)
 
-        print STATUS['goMessage']
+        print(STATUS['goMessage'])
         toSpeak = toSpeak + ". " + STATUS['goMessage']
 #        os.system("echo '%s' | festival --tts" % STATUS['goMessage'])
         os.system("echo '%s' | festival --tts" % toSpeak)
@@ -167,18 +167,18 @@ def printTrains(trains):
     destLength = 10
     printFormat = ' {time:<6}| {estimate:<6}| {dest:<' + str(destLength) + '}| {report:<20}'
     printFormat = '{time:<5} {dest:<' + str(destLength) + '} {estimate:<5}'
-    print printFormat.format(time="Time",
+    print(printFormat.format(time="Time",
                              dest="To",
                              estimate="Est",
-                             report="Report")
-    print "======================"
+                             report="Report"))
+    print("======================")
 #    print "12345678901234567890"
     for train in trains:
-        print printFormat.format(time=train['time'],
+        print(printFormat.format(time=train['time'],
                                  dest=train['dest'][:destLength],
                                  estimate=train['est'],
-                                 report=train['report'])
-    print "======================"
+                                 report=train['report']))
+    print("======================")
 
 def checkForShutDown():
     if (humble.switch(2)):
@@ -227,7 +227,7 @@ def reportTrains(trains):
     for i in range(0,CYCLES):
 #        announce(trains)
         now = datetime.datetime.now()
-        print now
+        print(now)
         nowH = int(now.strftime('%H'))
         nowM = int(now.strftime('%M'))
         if (CONFIG['big']):
@@ -285,12 +285,12 @@ def main():
     CONFIG['big']= args.big
 
     if CONFIG['big']:
-        print "Big Display"
+        print("Big Display")
     if CONFIG['speak']:
-        print "Announcing"
+        print("Announcing")
     if CONFIG['led']:
-        print "Lights"
-    print LDB.format(dep=CONFIG['dep'],arr=CONFIG['arr'])
+        print("Lights")
+    print(LDB.format(dep=CONFIG['dep'],arr=CONFIG['arr']))
     humble.init()
     hdt = humble.HumbleDisplayThread(humble.data)
     hdt.start()
@@ -300,7 +300,7 @@ def main():
 def doStuff():
     carryOn = True
     while(carryOn):
-        f = urllib.urlopen(LDB.format(dep=CONFIG['dep'],arr=CONFIG['arr']))
+        f = urllib.request.urlopen(LDB.format(dep=CONFIG['dep'],arr=CONFIG['arr']))
         stuff = f.read()
         o = open('tmp.html','w')
         o.write(stuff)

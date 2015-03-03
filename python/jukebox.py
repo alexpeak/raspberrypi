@@ -76,18 +76,18 @@ class Jukebox():
     ## MPD object instance
     self.client = MPDClient()
     if mpdConnect(self.client, CON_ID):
-        print 'Got connected!'
+        print('Got connected!')
     else:
-        print 'fail to connect MPD server.'
+        print('fail to connect MPD server.')
         sys.exit(1)
     try:
         f = open('/media/usb/playlist.txt','r')
         playlist = f.readline().rstrip()
-        print "Loading " + playlist
+        print("Loading " + playlist)
         self.client.clear()
         self.client.load(playlist)
     except IOError:
-        print "Problem reading playlist"
+        print("Problem reading playlist")
     self.client.stop()
     self.client.play()
 
@@ -109,11 +109,11 @@ class Jukebox():
     
 
   def skip(self):
-      print "Skipping"
-      self.client.next()
+      print("Skipping")
+      next(self.client)
 
   def stop(self):
-      print "Stopping"
+      print("Stopping")
       self.client.stop()
       humble.data.setLine(0,"")
       humble.data.setLine(1,"")
