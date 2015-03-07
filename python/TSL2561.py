@@ -3,113 +3,159 @@
 
 
 import sys
-# Not needed here. Thanks to https://github.com/mackstann for highlighting this.
-#import smbus
 import time
-#Adafruit_I2C from https://github.com/adafruit/Adafruit-Raspberry-Pi-Python-Code/blob/master/Adafruit_I2C/Adafruit_I2C.py
 from Adafruit_I2C import Adafruit_I2C
+from enum import Enum
 
+SLAVE_ADDRESS = 0x39
+COMMAND_REGISTER_SELECT = 0x80
+CONTROL_REGISTER_ADDRESS = 0x00
+CONTROL_REGISTER_POWERON = 0x03
+CONTROL_REGISTER_POWEROFF = 0x00
+TIMING_REGISTER_ADDRESS = 0x01
+DATA_REGISTER_ADDRESS_FULL_LOW = 0x8c
+DATA_REGISTER_ADDRESS_IR_LOW = 0x8e
 
-### Written for Python 2 <-!!!
-### Big thanks to bryand, who wrote the code that I borrowed heavily from/was inspired by
-### More thanks pandring who kind of kickstarted my work on the TSL2561 sensor
-### A great big huge thanks to driverblock and the Adafruit team (Congrats on your many succeses
-### Ladyada).  Without you folks I would just be a guy sitting somewhere thinking about cool stuff
-### Now I'm a guy building cool stuff.
-### If any of this code proves useful, drop me a line at medicforlife.blogspot.com
+class Gain(Enum):
+    auto = 0
+    low = 1
+    high = 2
+GainCommand = {Gain.low:  0x00,
+               Gain.high: 0x10}
+GainFactor = {Gain.auto: 0,
+              Gain.low:  1,
+              Gain.high: 16}
 
-# TODO: Strip out values into constants. 
+class Integration(Enum):
+    fast = 0
+    medium = 1
+    slow = 2
+IntegrationCommand = {Integration.fast:   0x00,
+                      Integration.medium: 0x01,
+                      Integration.slow:   0x02}
+IntegrationTime = {Integration.fast:   13.7,
+                   Integration.medium: 101,
+                   Integration.slow:   402}
+IntegrationFactor = {Integration.fast:   0.034,
+                     Integration.medium: 0.252,
+                     Integration.slow:   1}
+IntegrationMax = {Integration.fast:   5047,
+                  Integration.medium: 37177,
+                  Integration.slow:   65535}
 
 class TSL2561:
     i2c = None
 
-    def __init__(self, address=0x39, debug=0, pause=0.8):
+    def __init__(self, address=SLAVE_ADDRESS,
+                       gain=Gain.high, # device default per datasheet
+                       integration=Integration.slow, # device default per datasheet
+                       debug=False,
+                       package='T'):
         self.i2c = Adafruit_I2C(address)
         self.address = address
-        self.pause = pause
         self.debug = debug
-        self.gain = 0 # no gain preselected
-        self.i2c.write8(0x80, 0x03)     # enable the device
+        self.gain = gain
+        self.integration = integration
+        self.package = package
+# enable the device
+        self.i2c.write8(COMMAND_REGISTER_SELECT | CONTROL_REGISTER_ADDRESS,
+                        CONTROL_REGISTER_POWERON)
 
-
-    def setGain(self,gain=1):
+    def setGain(self, gain):
         """ Set the gain """
-        if (gain != self.gain):
-            if (gain==1):
-                self.i2c.write8(0x81, 0x02)     # set gain = 1X and timing = 402 mSec
-                if (self.debug):
-                    print("Setting low gain")
-            else:
-                self.i2c.write8(0x81, 0x12)     # set gain = 16X and timing = 402 mSec
-                if (self.debug):
-                    print("Setting high gain")
-            self.gain=gain;                     # safe gain for calculation
-            time.sleep(self.pause)              # pause for integration (self.pause must be bigger than integration time)
+        if gain == Gain.auto:
+            gain = Gain.high
+        if gain != self.gain:
+            self.gain=gain;      # save gain for calculation
+            self.updateTiming()
 
+    def setIntegrationTime(self, time):
+        """ Set the integration time """
+        if time != self.integration:
+            self.integration = time; # save time for calculation
+            self.updateTiming()
+
+    def updateTiming(self):
+        """ Update the new gain/integration timing data on the device """
+        self.i2c.write8(COMMAND_REGISTER_SELECT | TIMING_REGISTER_ADDRESS,
+                        GainCommand[self.gain] | IntegrationCommand[self.integration])
+        time.sleep(1.5*IntegrationTime[self.integration]/1000)
 
     def readWord(self, reg):
         """Reads a word from the I2C device"""
         try:
             wordval = self.i2c.readU16(reg)
-            newval = self.i2c.reverseByteOrder(wordval)
-            if (self.debug):
-                print(("I2C: Device 0x%02X returned 0x%04X from reg 0x%02X" % (self.address, wordval & 0xFFFF, reg)))
-            return newval
+            if self.debug:
+                print(("I2C: Device 0x%02X returned 0x%04X from reg 0x%02X" % (self.address,
+                                                                               wordval & 0xFFFF,
+                                                                               reg)))
+            return wordval
         except IOError:
             print(("Error accessing 0x%02X: Check your I2C address" % self.address))
             return -1
 
 
-    def readFull(self, reg=0x8C):
+    def readFull(self):
         """Reads visible+IR diode from the I2C device"""
-        return self.readWord(reg);
+        return self.readWord(DATA_REGISTER_ADDRESS_FULL_LOW);
 
-    def readIR(self, reg=0x8E):
+    def readIR(self):
         """Reads IR only diode from the I2C device"""
-        return self.readWord(reg);
+        return self.readWord(DATA_REGISTER_ADDRESS_IR_LOW);
 
-    def readLux(self, gain = 0):
-        """Grabs a lux reading either with autoranging (gain=0) or with a specified gain (1, 16)"""
-        if (gain == 1 or gain == 16):
-            self.setGain(gain) # low/highGain
+    def readLux(self, gain = Gain.auto):
+        """Grabs a lux reading either with autoranging (Gain.auto) or with a specified gain (Gain.low, Gain.high)"""
+        if gain in (Gain.low, Gain.high):
+            self.setGain(gain) # low/high Gain
             ambient = self.readFull()
             IR = self.readIR()
-        elif (gain==0): # auto gain
-            self.setGain(16) # first try highGain
+        else: # auto gain
+            self.setGain(Gain.high) # first try highGain
+            intMax = IntegrationMax[self.integration]
             ambient = self.readFull()
-            if (ambient < 65535):
+            if ambient < intMax:
                 IR = self.readIR()
-            if (ambient >= 65535 or IR >= 65535): # value(s) exeed(s) datarange
-                self.setGain(1) # set lowGain
+            if ambient >= intMax or IR >= intMax: # value(s) exeed(s) datarange
+                self.setGain(Gain.low)
                 ambient = self.readFull()
                 IR = self.readIR()
 
-        if (self.gain==1):
-           ambient *= 16    # scale 1x to 16x
-           IR *= 16         # scale 1x to 16x
+        ambient *= 16/GainFactor[self.gain]
+        IR *= 16/GainFactor[self.gain]
 
-        ratio = (IR / float(ambient)) # changed to make it run under python 2
+        ratio = IR / float(ambient)
 
-        if (self.debug):
+        if self.debug:
             print("IR Result", IR)
             print("Ambient Result", ambient)
 
-        if ((ratio >= 0) & (ratio <= 0.50)):
-            lux = (0.0304 * ambient) - (0.062 * ambient * (ratio**1.4))
-        elif (ratio <= 0.61):
-            lux = (0.0224 * ambient) - (0.031 * IR)
-        elif (ratio <= 0.80):
-            lux = (0.0128 * ambient) - (0.0153 * IR)
-        elif (ratio <= 1.3):
-            lux = (0.00146 * ambient) - (0.00112 * IR)
-        elif (ratio > 1.3):
-            lux = 0
+        if self.package.upper() == 'CS':
+            if ratio >= 0 and ratio <= 0.52:
+                lux = (0.0315 * ambient) - (0.0593 * ambient * (ratio**1.4))
+            elif ratio <= 0.65:
+                lux = (0.0229 * ambient) - (0.0291 * IR)
+            elif ratio <= 0.80:
+                lux = (0.0157 * ambient) - (0.018 * IR)
+            elif ratio <= 1.3:
+                lux = (0.00338 * ambient) - (0.0026 * IR)
+            else:
+                lux = 0
+        else:
+            if ratio >= 0 and ratio <= 0.50:
+                lux = (0.0304 * ambient) - (0.062 * ambient * (ratio**1.4))
+            elif ratio <= 0.61:
+                lux = (0.0224 * ambient) - (0.031 * IR)
+            elif ratio <= 0.80:
+                lux = (0.0128 * ambient) - (0.0153 * IR)
+            elif ratio <= 1.3:
+                lux = (0.00146 * ambient) - (0.00112 * IR)
+            else:
+                lux = 0
 
         return lux
 
 if __name__ == "__main__":
     tsl=TSL2561()
     print(tsl.readLux())
-#print "LUX HIGH GAIN ", tsl.readLux(16)
 #print "LUX LOW GAIN ", tsl.readLux(1)
 #print "LUX AUTO GAIN ", tsl.readLux()
