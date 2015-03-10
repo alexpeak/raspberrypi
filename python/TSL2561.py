@@ -123,7 +123,7 @@ class TSL2561:
         ambient *= 16/GainFactor[self.gain]
         IR *= 16/GainFactor[self.gain]
 
-        ratio = IR / float(ambient)
+        ratio = IR / float(ambient) if ambient > 0 else 0
 
         if self.debug:
             print("IR Result", IR)
